@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <title>لوحة تحكم المدرسة</title>
+  <style>
+    body {
+      background-color: #0a0f1e;
+      color: white;
+      font-family: Arial;
+      padding: 40px;
+    }
+    h1 { color: #00c896; text-align: center; }
+    .بطاقة {
+      background-color: #111827;
+      border: 1px solid #1e2d47;
+      border-radius: 15px;
+      padding: 20px;
+      margin: 15px 0;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 1px solid #1e2d47;
+      background: #1a2744;
+      color: white;
+      margin: 8px 0;
+      box-sizing: border-box;
+    }
+    button {
+      background:#00c896;
+      color:white;
+      border:none;
+      padding:10px 20px;
+      border-radius:8px;
+      cursor:pointer;
+      font-size:16px;
+      margin-top: 10px;
+    }
+    button.حذف {
+      background:#ef4444;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 12px;
+      border: 1px solid #1e2d47;
+      text-align: right;
+    }
+    th { background: #1a2744; color: #00c896; }
+  </style>
+</head>
+<body>
+
+  <h1>⚙️ لوحة تحكم المدرسة</h1>
+
+  <!-- إضافة ولي أمر -->
+  <div class="بطاقة">
+    <h2>➕ إضافة ولي أمر جديد</h2>
+    <input type="text" id="pin_جديد" placeholder="كلمة السر (حروف وأرقام مثل ab12cd)" />
+    <input type="text" id="طلاب_جديد" placeholder="الأبناء: اسم|فصل,اسم|فصل" />
+    <button onclick="أضف_ولي()">إضافة</button>
+    <p id="رسالة_إضافة" style="color:#00c896;"></p>
+  </div>
+
+  <!-- قائمة أولياء الأمور -->
+  <div class="بطاقة">
+    <h2>👨‍👦 أولياء الأمور</h2>
+    <table>
+      <tr>
+        <th>كلمة السر</th>
+        <th>الأبناء</th>
+        <th>حذف</th>
+      </tr>
+      <tbody id="جدول_أولياء"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://pcfcfiidaaqlmhhdctmk.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZmNmaWlkYWFxbG1oaGRjdG1rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMjk2ODQsImV4cCI6MjA5NDYwNTY4NH0.wllF4eYEIhdfSEwXNmCxPCtM9eUAw3lyVOSFf6DZnGM';
+
+    async function تحميل_أولياء() {
+      let response = await fetch(SUPABASE_URL + '/rest/v1/parents?select=*', {
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_KEY
+        }
+      });
+      let data = await response.json();
+      let tbody = document.getElementById('جدول_أولياء');
+      tbody.innerHTML = '';
+      data.forEach(p => {
+        let tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${p.pin}</td>
+          <td>${p.students_list}</td>
+          <td><button class="حذف" onclick="حذف_ولي(${p.id})">🗑️ حذف</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function أضف_ولي() {
+      let pin = document.getElementById('pin_جديد').value;
+      let students = document.getElementById('طلاب_جديد').value;
+
+      if (!pin || !students) {
+        document.getElementById('رسالة_إضافة').innerText = '❌ املئي الحقول!';
+        return;
+      }
+
+      let response = await fetch(SUPABASE_URL + '/rest/v1/parents', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_KEY,
+          'Prefer': 'return=minimal
