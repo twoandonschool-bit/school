@@ -32,22 +32,19 @@
   </style>
 </head>
 <body>
-
   <h1>📢 شاشة الاستدعاء</h1>
   <p>الطلاب المطلوب استدعاؤهم</p>
   <div id="قائمة"></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const SUPABASE_URL = 'https://pcfcfiidaaqlmhhdctmk.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZmNmaWlkYWFxbG1oaGRjdG1rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMjk2ODQsImV4cCI6MjA5NDYwNTY4NH0.wllF4eYEIhdfSEwXNmCxPCtM9eUAw3lyVOSFf6DZnGM';
 
-    const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
     function أضف_بطاقة(student) {
+      if (document.getElementById('student-' + student.id)) return;
       let قائمة = document.getElementById('قائمة');
       let div = document.createElement('div');
-      div.ClassName = 'بطاقة';
+      div.className = 'بطاقة';
       div.id = 'student-' + student.id;
       div.innerHTML = '👦 ' + student.name + ' — ' + student.Class +
         ' <button onclick="احذف(' + student.id + ')">✅ تم الاستدعاء</button>';
@@ -55,21 +52,29 @@
     }
 
     async function احذف(id) {
-      await client.from('students').delete().eq('id', id);
+      await fetch(SUPABASE_URL + '/rest/v1/students?id=eq.' + id, {
+        method: 'DELETE',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_KEY
+        }
+      });
       document.getElementById('student-' + id).remove();
     }
 
     async function تحميل() {
-      let { data } = await client.from('students').select('*');
+      let response = await fetch(SUPABASE_URL + '/rest/v1/students?select=*', {
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_KEY
+        }
+      });
+      let data = await response.json();
       data.forEach(s => أضف_بطاقة(s));
     }
 
-    client.channel('students').on(
-      'postgres_changes',
-      { event: 'INSERT', schema: 'public', table: 'students' },
-      (payload) => أضف_بطاقة(payload.new)
-    ).subscribe();
-
+    // تحديث كل 5 ثواني
+    setInterval(تحميل, 5000);
     تحميل();
   </script>
 </body>
