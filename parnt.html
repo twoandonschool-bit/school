@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <title>تطبيق ولي الأمر</title>
+  <style>
+    body {
+      background-color: #f0f4ff;
+      font-family: Arial;
+      text-align: center;
+      padding: 40px;
+    }
+    h1 { color: #0a0f1e; font-size: 30px; }
+    select {
+      width: 300px;
+      padding: 12px;
+      font-size: 18px;
+      border-radius: 10px;
+      border: 2px solid #dde4f5;
+      margin: 20px 0;
+    }
+    button {
+      background-color: #00c896;
+      color: white;
+      border: none;
+      padding: 15px 40px;
+      font-size: 20px;
+      border-radius: 12px;
+      cursor: pointer;
+      display: block;
+      margin: 10px auto;
+      width: 300px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🚗 وصلت للمدرسة</h1>
+  <p>اختر اسم ابنك</p>
+  <select id="اسم_الطالب">
+    <option value="عبدالله محمد|الصف الأول أ">عبدالله محمد — الصف الأول أ</option>
+    <option value="سلطان أحمد|الصف الثالث ب">سلطان أحمد — الصف الثالث ب</option>
+    <option value="فيصل خالد|الصف الثاني أ">فيصل خالد — الصف الثاني أ</option>
+  </select>
+  <button onclick="أرسل()">📢 أرسل إشعار للمدرسة</button>
+  <p id="رسالة" style="color:#00c896; font-size:18px;"></p>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = 'https://pcfcfiidaaqlmhhdctmk.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZmNmaWlkYWFxbG1oaGRjdG1rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMjk2ODQsImV4cCI6MjA5NDYwNTY4NH0.wllF4eYEIhdfSEwXNmCxPCtM9eUAw3lyVOSFf6DZnGM';
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    async function أرسل() {
+      let قيمة = document.getElementById('اسم_الطالب').value;
+      let [الاسم, الفصل] = قيمة.split('|');
+      let { error } = await client.from('students').insert([
+        { name: الاسم, Class: الفصل }
+      ]);
+      if (error) {
+        document.getElementById('رسالة').innerText = '❌ حدث خطأ! ' + error.message;
+      } else {
+        document.getElementById('رسالة').innerText = '✅ تم إرسال الإشعار! انتظر استدعاء ' + الاسم;
+      }
+    }
+  </script>
+</body>
+</html>

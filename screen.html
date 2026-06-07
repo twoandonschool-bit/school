@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <title>شاشة المدرسة</title>
+  <style>
+    body {
+      background-color: #0a0f1e;
+      color: white;
+      font-family: Arial;
+      text-align: center;
+      padding: 40px;
+    }
+    h1 { color: #00c896; font-size: 50px; }
+    .بطاقة {
+      background-color: #111827;
+      border: 2px solid #1e2d47;
+      border-radius: 15px;
+      padding: 20px;
+      margin: 15px auto;
+      width: 400px;
+      font-size: 22px;
+    }
+    button {
+      background:#00c896;
+      color:white;
+      border:none;
+      padding:8px 20px;
+      border-radius:8px;
+      cursor:pointer;
+      margin-right:15px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📢 شاشة الاستدعاء</h1>
+  <p>الطلاب المطلوب استدعاؤهم</p>
+  <div id="قائمة"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = 'https://pcfcfiidaaqlmhhdctmk.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZmNmaWlkYWFxbG1oaGRjdG1rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMjk2ODQsImV4cCI6MjA5NDYwNTY4NH0.wllF4eYEIhdfSEwXNmCxPCtM9eUAw3lyVOSFf6DZnGM';
+
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    function أضف_بطاقة(student) {
+      let قائمة = document.getElementById('قائمة');
+      let div = document.createElement('div');
+      div.ClassName = 'بطاقة';
+      div.id = 'student-' + student.id;
+      div.innerHTML = '👦 ' + student.name + ' — ' + student.Class +
+        ' <button onclick="احذف(' + student.id + ')">✅ تم الاستدعاء</button>';
+      قائمة.appendChild(div);
+    }
+
+    async function احذف(id) {
+      await client.from('students').delete().eq('id', id);
+      document.getElementById('student-' + id).remove();
+    }
+
+    async function تحميل() {
+      let { data } = await client.from('students').select('*');
+      data.forEach(s => أضف_بطاقة(s));
+    }
+
+    client.channel('students').on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'students' },
+      (payload) => أضف_بطاقة(payload.new)
+    ).subscribe();
+
+    تحميل();
+  </script>
+</body>
+</html>
