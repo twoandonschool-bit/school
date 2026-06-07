@@ -41,14 +41,12 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZmNmaWlkYWFxbG1oaGRjdG1rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMjk2ODQsImV4cCI6MjA5NDYwNTY4NH0.wllF4eYEIhdfSEwXNmCxPCtM9eUAw3lyVOSFf6DZnGM';
 
     function أضف_بطاقة(student) {
-      if (document.getElementById('student-' + student.id)) return;
-      let قائمة = document.getElementById('قائمة');
       let div = document.createElement('div');
       div.className = 'بطاقة';
       div.id = 'student-' + student.id;
       div.innerHTML = '👦 ' + student.name + ' — ' + student.Class +
         ' <button onclick="احذف(' + student.id + ')">✅ تم الاستدعاء</button>';
-      قائمة.appendChild(div);
+      document.getElementById('قائمة').appendChild(div);
     }
 
     async function احذف(id) {
@@ -70,11 +68,11 @@
         }
       });
       let data = await response.json();
+      document.getElementById('قائمة').innerHTML = '';
       data.forEach(s => أضف_بطاقة(s));
     }
 
-    // تحديث كل 5 ثواني
-    setInterval(تحميل, 5000);
+    setInterval(تحميل, 3000);
     تحميل();
   </script>
 </body>
