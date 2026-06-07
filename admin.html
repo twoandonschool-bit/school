@@ -3,81 +3,91 @@
 <head>
   <title>لوحة تحكم المدرسة</title>
   <style>
-    body {
-      background-color: #0a0f1e;
-      color: white;
-      font-family: Arial;
-      padding: 40px;
-    }
-    h1 { color: #00c896; text-align: center; }
-    .بطاقة {
-      background-color: #111827;
-      border: 1px solid #1e2d47;
-      border-radius: 15px;
-      padding: 20px;
-      margin: 15px 0;
-    }
-    input {
-      width: 100%;
-      padding: 10px;
-      font-size: 16px;
-      border-radius: 8px;
-      border: 1px solid #1e2d47;
-      background: #1a2744;
-      color: white;
-      margin: 8px 0;
-      box-sizing: border-box;
-    }
-    button {
-      background:#00c896;
-      color:white;
-      border:none;
-      padding:10px 20px;
-      border-radius:8px;
-      cursor:pointer;
-      font-size:16px;
-      margin-top: 10px;
-    }
-    button.del {
-      background:#ef4444;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-    th, td {
-      padding: 12px;
-      border: 1px solid #1e2d47;
-      text-align: right;
-    }
-    th { background: #1a2744; color: #00c896; }
+    body { background:#0a0f1e; color:white; font-family:Arial; padding:40px; }
+    h1 { color:#00c896; text-align:center; }
+    .card { background:#111827; border:1px solid #1e2d47; border-radius:15px; padding:20px; margin:15px 0; }
+    input { width:100%; padding:10px; font-size:16px; border-radius:8px; border:1px solid #1e2d47; background:#1a2744; color:white; margin:8px 0; box-sizing:border-box; }
+    .btn { background:#00c896; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-size:16px; margin-top:10px; }
+    .del { background:#ef4444; }
+    table { width:100%; border-collapse:collapse; margin-top:20px; }
+    th,td { padding:12px; border:1px solid #1e2d47; text-align:right; }
+    th { background:#1a2744; color:#00c896; }
+    #msg { margin-top:10px; font-size:16px; }
   </style>
 </head>
 <body>
-
   <h1>⚙️ لوحة تحكم المدرسة</h1>
 
-  <div class="بطاقة">
-    <h2>➕ إضافة ولي أمر جديد</h2>
-    <input type="text" id="new_pin" placeholder="كلمة السر مثل ab12cd" />
-    <input type="text" id="new_students" placeholder="الأبناء: اسم|فصل,اسم|فصل" />
-    <button onclick="addParent()">إضافة</button>
-    <p id="add_msg" style="color:#00c896;"></p>
+  <div class="card">
+    <h2>➕ إضافة ولي أمر</h2>
+    <input type="text" id="pin" placeholder="كلمة السر مثل ab12cd" />
+    <input type="text" id="students" placeholder="مثال: احمد علي|الصف الاول" />
+    <button class="btn" id="addBtn">إضافة</button>
+    <div id="msg"></div>
   </div>
 
-  <div class="بطاقة">
-    <h2>👨 أولياء الأمور</h2>
+  <div class="card">
+    <h2>👨‍👦 أولياء الأمور</h2>
     <table>
-      <tr>
-        <th>كلمة السر</th>
-        <th>الأبناء</th>
-        <th>حذف</th>
-      </tr>
-      <tbody id="parents_table"></tbody>
+      <tr><th>كلمة السر</th><th>الأبناء</th><th>حذف</th></tr>
+      <tbody id="tbl"></tbody>
     </table>
   </div>
 
   <script>
-    const SUPABASE_URL = 'https://pcfcfiidaaqlmhhdctmk.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZmNmaWlkYWFxbG1oaGRjdG1rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMjk2ODQsImV4cCI6MjA5NDYwNTY4NH0.wllF4eYEIhdfSEwXNmCxPCtM9eUAw3lyVOSFf6DZnGM';
+    const URL = 'https://pcfcfiidaaqlmhhdctmk.supabase.co/rest/v1';
+    const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZmNmaWlkYWFxbG1oaGRjdG1rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMjk2ODQsImV4cCI6MjA5NDYwNTY4NH0.wllF4eYEIhdfSEwXNmCxPCtM9eUAw3lyVOSFf6DZnGM';
+    const H = { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json' };
+
+    async function load() {
+      try {
+        let r = await fetch(URL + '/parents?select=*', { headers: H });
+        let d = await r.json();
+        let t = document.getElementById('tbl');
+        t.innerHTML = '';
+        if (Array.isArray(d)) {
+          d.forEach(p => {
+            t.innerHTML += `<tr><td>${p.pin}</td><td>${p.students_list}</td><td><button class="del btn" onclick="del(${p.id})">🗑️</button></td></tr>`;
+          });
+        }
+      } catch(e) {
+        document.getElementById('msg').innerHTML = '❌ خطأ في التحميل: ' + e.message;
+      }
+    }
+
+    document.getElementById('addBtn').addEventListener('click', async function() {
+      let pin = document.getElementById('pin').value.trim();
+      let students = document.getElementById('students').value.trim();
+      let msg = document.getElementById('msg');
+
+      if (!pin || !students) { msg.innerHTML = '❌ املئي الحقول!'; return; }
+
+      try {
+        let r = await fetch(URL + '/parents', {
+          method: 'POST',
+          headers: { ...H, 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ pin: pin, students_list: students })
+        });
+        if (r.ok) {
+          msg.innerHTML = '✅ تم الإضافة!';
+          document.getElementById('pin').value = '';
+          document.getElementById('students').value = '';
+          load();
+        } else {
+          let err = await r.text();
+          msg.innerHTML = '❌ خطأ: ' + err;
+        }
+      } catch(e) {
+        msg.innerHTML = '❌ خطأ: ' + e.message;
+      }
+    });
+
+    async function del(id) {
+      await fetch(URL + '/parents?id=eq.' + id, { method: 'DELETE', headers: H });
+      load();
+    }
+
+    load();
+  </script>
+</body>
+</html>
